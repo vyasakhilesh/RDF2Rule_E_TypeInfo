@@ -1,0 +1,195 @@
+package net.sansa_stack.template.spark.rdf
+
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
+import org.apache.spark.SparkConf
+import org.apache.spark._
+import org.apache.spark.graphx._
+// To make some of the examples work we will also need RDD
+import org.apache.spark.rdd.RDD
+
+object graphXtest {
+  def main(args: Array[String]) = {
+  val conf = new SparkConf().setAppName("GraphXTest").setMaster("local")
+  val sc = new SparkContext(conf)
+  
+  val vertexArray = Array(
+  (1L, ("Alice", 28)),
+  (2L, ("Bob", 27)),
+  (3L, ("Charlie", 65)),
+  (4L, ("David", 42)),
+  (5L, ("Ed", 55)),
+  (6L, ("Fran", 50))
+  )
+val edgeArray = Array(
+  Edge(2L, 1L, 7),
+  Edge(2L, 4L, 2),
+  Edge(3L, 2L, 4),
+  Edge(3L, 6L, 3),
+  Edge(4L, 1L, 1),
+  Edge(5L, 2L, 2),
+  Edge(5L, 3L, 8),
+  Edge(5L, 6L, 3)
+  )
+ 
+  val vertexArray1 = Array(
+  (1L, ("Alice")),
+  (2L, ("Bob")),
+  (3L, ("Charlie")),
+  (4L, ("David")),
+  (5L, ("Ed")),
+  (6L, ("Fran"))
+  )
+val edgeArray1 = Array(
+  Edge(2L, 1L, 7),
+  Edge(2L, 4L, 2),
+  Edge(3L, 2L, 4),
+  Edge(3L, 6L, 3),
+  Edge(4L, 1L, 1),
+  Edge(5L, 2L, 2),
+  Edge(5L, 3L, 8),
+  Edge(5L, 6L, 3),
+  Edge(5L, 6L, 2),
+  Edge(5L, 6L, 2),
+  Edge(2L, 4L, 2),
+  Edge(5L, 2L, 2),
+  Edge(2L, 4L, 2)
+  
+  )
+ val vertexRDD: RDD[(Long, (String, Int))] = sc.parallelize(vertexArray)
+ val edgeRDD: RDD[Edge[Int]] = sc.parallelize(edgeArray)
+ val graph: Graph[(String, Int), Int] = Graph(vertexRDD, edgeRDD)
+ 
+ val vertexRDD1: RDD[(Long, (String))] = sc.parallelize(vertexArray1)
+ val edgeRDD1: RDD[Edge[Int]] = sc.parallelize(edgeArray1)
+ val graph1: Graph[(String), Int] = Graph(vertexRDD1, edgeRDD1)
+ 
+ for(triplet <- graph1.triplets.collect())
+ {
+   
+ }
+  
+  val numlist = List(1,7,2)
+  //Tod0----------------------------------------------------
+  /* get set of Type for each entities*/
+  
+  
+  def searchedge(x:Int, y:List[Int]):Boolean={
+    y.contains(x)
+    
+  }
+ 
+  val C = List()
+  
+ 
+  val setofentity = graph1.triplets.filter(x=> searchedge(x.attr, numlist)).flatMap(x=>List(x.srcAttr, x.dstAttr))
+  val setofdistictentity = setofentity.distinct().collect().toList
+  val printsetofdistictentity = setofdistictentity.foreach(println)
+  println("")
+  //val printlistentity = listentity.distinct().foreach(println)
+ // val duplistentity = listentity.flatMap(t => List(t._1, t._2))
+ // val printduplistentity = duplistentity.distinct().foreach(println)
+  //val setoftypelist = List(2,3)
+  
+  def isequalentity(x:String, y:String):Boolean={
+    x==y
+  }
+  
+  //def setoftypelist(x:String):List[String]={
+    
+  //  graph1.triplets.filter(y=>isequalentity(y.srcAttr, x))
+ // }
+  
+  def searchdes(x:String, y:List[String], a:Int, b:Int):Boolean={
+  
+    ((y.contains(x))&&(a==b))
+    
+  }
+  
+ // val setoftypelist:List[(String, Int)] = List(("", 0))
+  //def setoftypelistfunc(x:(String, Int)) = {
+    
+  // setoftypelist+=x
+  //}
+  
+  //def 
+  
+  //for(i<-setofdistictentity)
+  //{
+    //println(i)
+   val setoftypelist = graph1.triplets.filter(x=>searchdes(x.srcAttr, setofdistictentity , x.attr, 2)).map(x=>(x.dstAttr, 1)).reduceByKey((a,b)=>(a+b))
+   val printsetoftypelist = setoftypelist.foreach(println)
+   println("")
+   
+   //Remove Types according to thresold
+   val support_count = 2
+   val freqsetoftypelist = setoftypelist.filter(x=>x._2 >= support_count).sortBy(_._2, false)
+  // sortBy(_._2)
+   val printfreqsetoftypelist = freqsetoftypelist.foreach(println)
+   println("")
+   
+   //Count > K remove
+  println(freqsetoftypelist.count())
+  val k:Int = 2
+  if(freqsetoftypelist.count() > k )
+  {
+    
+     val freqsetoftypelistRDD = sc.parallelize(freqsetoftypelist.take(k)) //I am losing RDD here
+  }
+ // val mergebyentity = setoftypelist.reduceByKey((a,b)=>(a + b))
+ // val printmergebyentity = mergebyentity.foreach(println)
+  
+ //count method for counting can be used here 
+ //graph.triplets.filter(case EdgeTriplet((a,b),c) => true)
+ //{case ( (id, (name, age)), (id1, (name1, age1)), like) => (like==7) }
+ //graph.edges.collect()
+// graph.vertices.foreach(println)
+  
+//graph.vertices.filter(pred)
+// graph.vertices.filter(pred)
+/* graph.vertices.filter {
+  case (id, (name, age)) => (age>30)
+}.collect.foreach {
+  case (id, (name, age)) => println(name+" is "+age)
+}*/
+ 
+/*for (triplet <- graph.triplets.collect()) {
+ /**
+   * Triplet has the following Fields:
+   *   triplet.srcAttr: (String, Int) // triplet.srcAttr._1 is the name
+   *   triplet.dstAttr: (String, Int)
+   *   triplet.attr: Int
+   *   triplet.srcId: VertexId
+   *   triplet.dstId: VertexId
+   */
+   println(triplet.srcAttr._1 + " likes " + triplet.dstAttr._1)  
+   println(triplet.attr)
+
+}*/
+ 
+// println(graph.numEdges)
+// println(graph.inDegrees)
+ 
+ /*case class User(name: String, age: Int, inDeg: Int, outDeg: Int)
+ val initialUserGraph: Graph[User, Int] = graph.mapVertices{ case (id, (name, age)) => User(name, age, 0, 0) }
+  
+  val userGraph = initialUserGraph.outerJoinVertices(initialUserGraph.inDegrees) {
+  case (id, u, inDegOpt) => User(u.name, u.age, inDegOpt.getOrElse(0), u.outDeg)
+}.outerJoinVertices(initialUserGraph.outDegrees) {
+  case (id, u, outDegOpt) => User(u.name, u.age, u.inDeg, outDegOpt.getOrElse(0))
+}
+
+//for ((id, property) <- userGraph.vertices.collect) {
+ // println(s"User $id is called ${property.name} and is liked by ${property.inDeg} people.")
+//}
+/*def outerJoinVertices[U, VD2](other: RDD[(VertexID, U)])
+      (mapFunc: (VertexID, VD, Option[U]) => VD2)
+    : Graph[VD2, ED]*/
+
+for ((id, property) <- userGraph.vertices.filter(p => p._2.inDeg == p._2.outDeg).collect()) {
+  println(s"User $id is called ${property.name} and is liked by ${property.inDeg} people.")
+}*/
+  
+ }
+  
+}
